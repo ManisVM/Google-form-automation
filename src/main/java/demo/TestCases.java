@@ -1,16 +1,25 @@
 package demo;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.bouncycastle.util.test.Test;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.pagefactory.AjaxElementLocatorFactory;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 
@@ -87,28 +96,17 @@ public class TestCases {
     public  void testCase01() throws InterruptedException{
         System.out.println("Start Test case: testCase01");
         driver.get("https://docs.google.com/forms/d/e/1FAIpQLSep9LTMntH5YqIXa5nkiPKSs283kdwitBBhXWyZdAS-e4CxBQ/viewform");
-        nameTextBox.sendKeys("Manis");
-        whyTextBox.sendKeys("To scale up my profession in the same domain for dream job");
-        experienceRadioBtn.click();
-        checkBox1.click();
-        checkBox2.click();
-        checkBox4.click();
+        TestCases.writeText("Manis", By.xpath("(//input[@type='text'])[1]"), driver);
+        TestCases.writeText("To scale up my profession in the same domain for dream job   " + TestCases.calculateEpocheTimetoString(0), By.xpath("(//textarea[@aria-label='Your answer'])[1]"), driver);
+        TestCases.clickCheckBox(driver, By.xpath("(//div[@role='radio'])[1]"));
+        TestCases.clickCheckBox(driver, By.xpath("//div[@data-answer-value='Java']"));
+        TestCases.clickCheckBox(driver, By.xpath("//div[@data-answer-value='Selenium']"));
+        TestCases.clickCheckBox(driver, By.xpath("//div[@data-answer-value='TestNG']"));
         Thread.sleep(2000);
-        chooseDrop.click();
-        MrValue.click();
+        TestCases.clickCheckBox(driver, By.xpath("//span[text()='Choose']"));
+        TestCases.clickCheckBox(driver, By.xpath("(//div[@data-value='Mr'])[2]"));
         Thread.sleep(2000);
-        LocalDate currentDate = LocalDate.now();
-        LocalDate previousDate = currentDate.minusDays(7);
-        System.out.println(previousDate);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        String previousDateString = previousDate.format(formatter);
-        System.out.println(previousDateString);
-        String[] dateSplit = previousDateString.split("/");
-        for (String value : dateSplit) {
-            date.sendKeys(value);
-            System.out.println(value);
-    
-        }
+        TestCases.enterdate(driver, By.xpath("//input[@type='date']"), "dd/MM/yyyy");
         LocalTime currentTime = LocalTime.now();
         String currentTimeString = currentTime.toString();
         System.out.println("Current Time: " + currentTime);
@@ -123,4 +121,65 @@ public class TestCases {
     }
 
 
+    public static void writeText(String TextToSend, By locator, ChromeDriver driver) throws InterruptedException{
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        WebElement element = driver.findElement(locator);
+        element.clear();
+        element.sendKeys(TextToSend);
+        Thread.sleep(2000);
+        System.out.println("Success");
+
+    }
+
+
+    public static void enterdate(ChromeDriver driver, By Locator, String format){
+        LocalDate currentDate = LocalDate.now();
+        LocalDate previousDate = currentDate.minusDays(7);
+        System.out.println(previousDate);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        String previousDateString = previousDate.format(formatter);
+        System.out.println(previousDateString);
+        String[] dateSplit = previousDateString.split("/");
+        WebElement element = driver.findElement(Locator);
+        for (String value : dateSplit) {
+            element.sendKeys(value);
+            System.out.println(value);
+    
+        }
+    }
+
+    public static String calculateTimeToString(String formaString, long offsetInMs){
+
+        LocalDateTime TimeNow = LocalDateTime.now();
+        Long Seconds = offsetInMs/1000;
+        Long Nanos = (offsetInMs % 1000)* 1000000;
+        LocalDateTime NewTime = TimeNow.minus(Duration.ofSeconds(Seconds,Nanos));
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(formaString);
+        String FormattedDateAndTime = NewTime.format(formatter);
+
+        return FormattedDateAndTime;
+
+    }
+
+    public static String calculateEpocheTimetoString(int offsetInMs){
+
+        Instant now = Instant.now();
+        Instant newInstant = now.plusMillis(offsetInMs);
+        long epochMilli = newInstant.toEpochMilli();
+        return String.valueOf(epochMilli);
+    }
+
+    public static void clickCheckBox(ChromeDriver driver, By Locator){
+        System.out.println("Trying to check checkBox");
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(Locator));
+        WebElement element = driver.findElement(Locator);
+        // ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+        Actions action= new Actions(driver);
+        action.moveToElement(element);
+        element.click();
+
+    }
 }
